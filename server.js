@@ -6,6 +6,6 @@ dotenv.config();
 
 connectDb();
 
-const port =2000
+const port =process.env.PORT || 3000
 
 app.listen(port,()=>console.log("Server Running",port))

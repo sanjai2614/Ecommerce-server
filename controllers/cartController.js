@@ -1,17 +1,17 @@
 import Cart from "../models/cart.js";
 import mongoose from "mongoose";
-import products from "../models/product.js";
 
 export const addToCart = async (req, res) => {
   try {
-    const { userId, productId } = req.body;
+    const userId = req.user.id;
+const { productId } = req.body;
 
     // console.log("BODY:", req.body);
 
     // ✅ validation
-    if (!userId || !productId) {
-      return res.status(400).json({ message: "Missing data" });
-    }
+   if (!productId) {
+  return res.status(400).json({ message: "Product ID required" });
+}
 
     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(productId)) {
       return res.status(400).json({ message: "Invalid ID" });
@@ -50,13 +50,13 @@ export const addToCart = async (req, res) => {
 
 export const getCart = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user.id;
 
     // console.log("PARAM:", userId); // 🔥 debug
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid userId" });
-    }
+    // if (!mongoose.Types.ObjectId.isValid(userId)) {
+    //   return res.status(400).json({ message: "Invalid userId" });
+    // }
 
     const cart = await Cart.findOne({ userId })
       .populate("products.productId");
@@ -74,8 +74,15 @@ export const getCart = async (req, res) => {
 };
 
 export const updateQuantity = async (req, res) => {
-  const { userId, productId, action } = req.body;
+  const userId = req.user.id;
 
+const { productId, action } = req.body;
+
+if (!productId || !action) {
+  return res.status(400).json({
+    message: "Missing required fields",
+  });
+}
   const cart = await Cart.findOne({ userId });
 
   if (!cart) return res.status(404).json({ message: "Cart not found" });
@@ -99,15 +106,22 @@ export const updateQuantity = async (req, res) => {
 
 
 export const removeItem = async (req, res) => {
-  const { userId, productId } = req.body;
+  const userId = req.user.id;
+const { productId } = req.body;
 
   const cart = await Cart.findOne({ userId });
 
-  cart.products = cart.products.filter(
-    p => p.productId.toString() !== productId
-  );
+if (!cart) {
+  return res.status(404).json({
+    message: "Cart not found",
+  });
+}
 
-  await cart.save();
+cart.products = cart.products.filter(
+  p => p.productId.toString() !== productId
+);
 
-  res.json(cart);
+await cart.save();
+
+res.json(cart);
 };

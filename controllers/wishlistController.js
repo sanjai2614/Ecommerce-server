@@ -1,52 +1,78 @@
 import Wishlist from "../models/wishlist.js";
 
-
-// add to wishlist
+// Add to Wishlist
 export const addToWishlist = async (req, res) => {
   try {
-    const { userId, productId } = req.body;
+    const userId = req.user.id;
+    const { productId } = req.body;
 
     const exist = await Wishlist.findOne({ userId, productId });
 
     if (exist) {
-      return res.json({ msg: "Already liked ❤️" });
+      return res.json({
+        msg: "Already liked ❤️",
+      });
     }
 
-    const item = await Wishlist.create({ userId, productId });
+    const item = await Wishlist.create({
+      userId,
+      productId,
+    });
 
     res.json({
       msg: "Added to wishlist ❤️",
-      item
+      item,
     });
 
   } catch (error) {
     console.log("Add Wishlist Error:", error.message);
-    res.status(500).json({ error: error.message });
+
+    res.status(500).json({
+      error: error.message,
+    });
   }
 };
 
-// get wishlist
-
+// Get Wishlist
 export const getWishlist = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user.id;
 
-    const items = await Wishlist
-      .find({ userId })
-      .populate("productId");
+    const items = await Wishlist.find({
+      userId,
+    }).populate("productId");
 
     res.json(items);
 
   } catch (error) {
     console.log("Wishlist Error:", error.message);
-    res.status(500).json({ error: error.message });
+
+    res.status(500).json({
+      error: error.message,
+    });
   }
 };
 
-// remove wishlist
+// Remove Wishlist
+export const removeWishlist = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { productId } = req.body;
 
-export const removeWishlist = async(req,res)=>{
-    const {userId,productId}=req.body
-    await Wishlist.findOneAndDelete({userId,productId})
-    res.json("removed like")
-}
+    await Wishlist.findOneAndDelete({
+      userId,
+      productId,
+    });
+
+    res.json({
+      msg: "Removed from wishlist",
+    });
+
+  } catch (error) {
+    console.log("Remove Wishlist Error:", error.message);
+
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
